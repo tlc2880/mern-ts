@@ -1,26 +1,27 @@
 import express, { Request, Response }  from 'express'
 import path from 'path'
-import logger from './middleware/logger'
 import errorHandler from './middleware/errorHandler'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import corsOptions from './config/corsOptions'
+import connectDB from './config/dbConn'
+import mongoose from 'mongoose'
+require('dotenv').config()
 
+const { logger, logEvents  } = require('./middleware/logger')
 const app = express()
 const PORT = process.env.PORT || 3500
-// @ts-expect-error
+
 app.use(logger)
-
 app.use(cors(corsOptions))
-
+console.log(process.env.NODE_ENV)
+connectDB();
 app.use(express.json())
-
 app.use(cookieParser())
-
-app.use('/', express.static(path.join(__dirname, 'public')))
-
+app.use('/', express.static(path.join(__dirname, '/public')))
 app.use('/', require('./routes/root'))
-
+app.use('/users', require('./routes/userRoutes'))
+app.use('/notes', require('./routes/noteRoutes'))
 app.all("*", (req: Request, res: Response) => {
     res.status(404)
     if (req.accepts('html')) {
@@ -33,4 +34,12 @@ app.all("*", (req: Request, res: Response) => {
 })
 
 app.use(errorHandler)
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+mongoose.connection.once('open', () => {
+    console.log('Connected to MongoDB')
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+})
+
+mongoose.connection.on('error', err => {
+    console.log(err);
+    logEvents(`${err.no}: ${err.code}:\t${err.syscall}:\t${err.hostname}`, 'mongoErrLog.log')
+})

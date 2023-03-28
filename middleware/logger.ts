@@ -27,4 +27,4 @@ const logger = (req: Request, res: Response, next: NextFunction) => {
     next()
 }
 
-export default { logEvents, logger }
+module.exports = { logEvents, logger } // default export will not compiled
