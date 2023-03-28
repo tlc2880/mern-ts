@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction }  from 'express'
-import logEvents from './logger'
+const { logEvents } = require('./logger')
 
 const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
-    // @ts-expect-error
+   
     logEvents(`${err.name}: ${err.message}\t${req.method}\t${req.url}\t${req.headers.origin}`, 'errLog.log')
     console.log(err.stack)
 
